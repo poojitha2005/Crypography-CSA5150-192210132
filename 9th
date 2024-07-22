@@ -1,0 +1,104 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 5
+
+// Function to prepare the key table
+void prepareKeyTable(char key[], char keyTable[SIZE][SIZE]) {
+    int dict[26] = {0};
+    int i, j, k;
+    char ch;
+    
+    // Fill the key table
+    for (i = 0, j = 0, k = 0; k < strlen(key); k++) {
+        if (key[k] != 'J' && dict[key[k] - 'A'] == 0) {
+            keyTable[i][j++] = key[k];
+            dict[key[k] - 'A'] = 1;
+            if (j == SIZE) {
+                j = 0;
+                i++;
+            }
+        }
+    }
+
+    // Fill remaining letters (except J)
+    for (ch = 'A'; ch <= 'Z'; ch++) {
+        if (ch != 'J' && dict[ch - 'A'] == 0) {
+            keyTable[i][j++] = ch;
+            dict[ch - 'A'] = 1;
+            if (j == SIZE) {
+                j = 0;
+                i++;
+            }
+        }
+    }
+}
+
+// Function to search for characters in the key table and return their positions
+void search(char keyTable[SIZE][SIZE], char a, char b, int pos[]) {
+    int i, j;
+
+    if (a == 'J') a = 'I';
+    if (b == 'J') b = 'I';
+
+    for (i = 0; i < SIZE; i++) {
+        for (j = 0; j < SIZE; j++) {
+            if (keyTable[i][j] == a) {
+                pos[0] = i;
+                pos[1] = j;
+            }
+            if (keyTable[i][j] == b) {
+                pos[2] = i;
+                pos[3] = j;
+            }
+        }
+    }
+}
+
+// Function to decrypt the Playfair cipher text
+void decrypt(char keyTable[SIZE][SIZE], char str[], char decrypted[]) {
+    int i, a, b, c, d, pos[4];
+
+    for (i = 0; i < strlen(str); i += 2) {
+        search(keyTable, str[i], str[i + 1], pos);
+
+        if (pos[0] == pos[2]) {
+            // Same row
+            a = pos[0];
+            b = (pos[1] - 1 + SIZE) % SIZE;
+            c = pos[2];
+            d = (pos[3] - 1 + SIZE) % SIZE;
+        } else if (pos[1] == pos[3]) {
+            // Same column
+            a = (pos[0] - 1 + SIZE) % SIZE;
+            b = pos[1];
+            c = (pos[2] - 1 + SIZE) % SIZE;
+            d = pos[3];
+        } else {
+            // Rectangle
+            a = pos[0];
+            b = pos[3];
+            c = pos[2];
+            d = pos[1];
+        }
+
+        decrypted[i] = keyTable[a][b];
+        decrypted[i + 1] = keyTable[c][d];
+    }
+    decrypted[i] = '\0';
+}
+
+int main() {
+    char key[] = "PLAYFAIREXAMPLE";
+    char keyTable[SIZE][SIZE];
+    char str[] = "KXJEYUREBEZWEHEWRYTUHEYFSKREHEGOYFIWTTTUOLKSYCAJPO?????????XBYBNTGONEYCUZWRGDSONSXBOUYWRHEBAAHYUSEDQ";
+    char decrypted[100];
+
+    prepareKeyTable(key, keyTable);
+    decrypt(keyTable, str, decrypted);
+
+    printf("Decrypted message: %s\n", decrypted);
+
+    return 0;
+}
