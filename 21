@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/des.h>
+
+#define BUFSIZE 1024
+#define BLOCK_SIZE 8
+
+void handleErrors(void);
+void print_hex(const char *title, const unsigned char *s, int len);
+void encrypt_ecb(const unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *ciphertext);
+void decrypt_ecb(const unsigned char *ciphertext, int ciphertext_len, unsigned char *key, unsigned char *plaintext);
+void encrypt_cbc(const unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *iv, unsigned char *ciphertext);
+void decrypt_cbc(const unsigned char *ciphertext, int ciphertext_len, unsigned char *key, unsigned char *iv, unsigned char *plaintext);
+void encrypt_cfb(const unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *iv, unsigned char *ciphertext);
+void decrypt_cfb(const unsigned char *ciphertext, int ciphertext_len, unsigned char *key, unsigned char *iv, unsigned char *plaintext);
+
+int main() {
+    unsigned char key[BLOCK_SIZE] = "01234567";
+    unsigned char iv[BLOCK_SIZE] = "abcdefgh";
+    unsigned char plaintext[BUFSIZE] = "This is a secret message.";
+    unsigned char ciphertext_ecb[BUFSIZE], ciphertext_cbc[BUFSIZE], ciphertext_cfb[BUFSIZE];
+    unsigned char decryptedtext_ecb[BUFSIZE], decryptedtext_cbc[BUFSIZE], decryptedtext_cfb[BUFSIZE];
+    int plaintext_len = strlen((char *)plaintext);
+
+    // Ensure buffers are zero-initialized
+    memset(ciphertext_ecb, 0, BUFSIZE);
+    memset(ciphertext_cbc, 0, BUFSIZE);
+    memset(ciphertext_cfb, 0, BUFSIZE);
+    memset(decryptedtext_ecb, 0, BUFSIZE);
+    memset(decryptedtext_cbc, 0, BUFSIZE);
+    memset(decryptedtext_cfb, 0, BUFSIZE);
+
+    // ECB Mode
+    encrypt_ecb(plaintext, plaintext_len, key, ciphertext_ecb);
+    decrypt_ecb(ciphertext_ecb, plaintext_len, key, decryptedtext_ecb);
+
+    // CBC Mode
+    encrypt_cbc(plaintext, plaintext_len, key, iv, ciphertext_cbc);
+    decrypt_cbc(ciphertext_cbc, plaintext_len, key, iv, decryptedtext_cbc);
+
+    // CFB Mode
+    encrypt_cfb(plaintext, plaintext_len, key, iv, ciphertext_cfb);
+    decrypt_cfb(ciphertext_cfb,
