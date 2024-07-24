@@ -1,0 +1,57 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/sha.h>
+
+void handleErrors(void) {
+    printf("An error occurred!\n");
+    exit(1);
+}
+
+int main() {
+    RSA *rsa = RSA_new();
+    BIGNUM *bn = BN_new();
+    if (rsa == NULL || bn == NULL) {
+        handleErrors();
+    }
+
+    if (!BN_set_word(bn, RSA_F4)) {
+        handleErrors();
+    }
+
+    if (!RSA_generate_key_ex(rsa, 2048, bn, NULL)) {
+        handleErrors();
+    }
+
+    unsigned char message[] = "Hello, RSA!";
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256(message, sizeof(message) - 1, hash);
+
+    unsigned char sig1[RSA_size(rsa)];
+    unsigned char sig2[RSA_size(rsa)];
+    unsigned int sig_len1, sig_len2;
+
+    if (!RSA_sign(NID_sha256, hash, SHA256_DIGEST_LENGTH, sig1, &sig_len1, rsa)) {
+        handleErrors();
+    }
+    if (!RSA_sign(NID_sha256, hash, SHA256_DIGEST_LENGTH, sig2, &sig_len2, rsa)) {
+        handleErrors();
+    }
+
+    printf("Message: %s\n", message);
+    printf("Signature 1:\n");
+    for (unsigned int i = 0; i < sig_len1; i++) {
+        printf("%02x", sig1[i]);
+    }
+    printf("\nSignature 2:\n");
+    for (unsigned int i = 0; i < sig_len2; i++) {
+        printf("%02x", sig2[i]);
+    }
+    printf("\n");
+
+    RSA_free(rsa);
+    BN_free(bn);
+
+    return 0;
+}
